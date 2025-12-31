@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cryptomepay"
+version = "1.0.0"
+description = "Official Python SDK for Cryptome Pay - Non-custodial cryptocurrency payment gateway"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+authors = [
+    {name = "Cryptome AI", email = "support@cryptomepay.com"}
+]
+keywords = [
+    "cryptome",
+    "cryptomepay",
+    "crypto",
+    "payment",
+    "gateway",
+    "usdt",
+    "trc20",
+    "bsc",
+    "polygon",
+    "ethereum",
+    "arbitrum",
+    "cryptocurrency",
+    "blockchain"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Office/Business :: Financial :: Point-Of-Sale",
+]
+dependencies = [
+    "requests>=2.25.0",
+]
+
+[project.optional-dependencies]
+async = ["aiohttp>=3.8.0"]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "responses>=0.23.0",
+    "aiohttp>=3.8.0",
+]
+
+[project.urls]
+Homepage = "https://cryptomepay.com"
+Documentation = "https://docs.cryptomepay.com/api"
+Repository = "https://github.com/cryptome-ai/cryptome-pay-python"
+Issues = "https://github.com/cryptome-ai/cryptome-pay-python/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["cryptomepay*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
