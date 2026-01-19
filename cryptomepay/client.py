@@ -90,7 +90,14 @@ class Client:
         Returns:
             API response dict
         """
+        import time
+        timestamp = str(int(time.time()))
+        nonce = self._generate_nonce()
+
         params = {
+            'api_key': self.api_key,
+            'timestamp': timestamp,
+            'nonce': nonce,
             'order_id': order_id,
             'amount': f'{amount:.2f}',
             'notify_url': notify_url,
@@ -104,6 +111,9 @@ class Client:
         signature = self._generate_signature(params)
 
         body = {
+            'api_key': self.api_key,
+            'timestamp': timestamp,
+            'nonce': nonce,
             'order_id': order_id,
             'amount': amount,
             'notify_url': notify_url,
@@ -207,7 +217,7 @@ class Client:
         return hmac.compare_digest(expected, signature)
 
     def _generate_signature(self, params: Dict[str, str]) -> str:
-        """Generate MD5 signature."""
+        """Generate HMAC-SHA256 signature."""
         # Filter and sort
         filtered = {
             k: v for k, v in params.items()
@@ -218,9 +228,17 @@ class Client:
         # Build query string
         query_string = urlencode(sorted_params)
 
-        # Append secret and hash
-        sign_string = query_string + self.api_secret
-        return hashlib.md5(sign_string.encode()).hexdigest()
+        # Generate HMAC-SHA256
+        return hmac.new(
+            self.api_secret.encode(),
+            query_string.encode(),
+            hashlib.sha256
+        ).hexdigest()
+
+    def _generate_nonce(self) -> str:
+        """Generate a random nonce string."""
+        import secrets
+        return secrets.token_hex(16)
 
     def _request(
         self,
