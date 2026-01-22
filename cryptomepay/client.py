@@ -137,7 +137,7 @@ class Client:
         Returns:
             API response dict
         """
-        return self._request('GET', f'/order/query?trade_id={trade_id}')
+        return self._request('GET', f'/merchant/order/query?trade_id={trade_id}')
 
     def query_payment_by_order_id(self, order_id: str) -> Dict[str, Any]:
         """
@@ -149,7 +149,7 @@ class Client:
         Returns:
             API response dict
         """
-        return self._request('GET', f'/order/query?order_id={order_id}')
+        return self._request('GET', f'/merchant/order/query?order_id={order_id}')
 
     def list_orders(
         self,
@@ -199,7 +199,7 @@ class Client:
 
     def verify_webhook_signature(self, payload: Dict[str, Any]) -> bool:
         """
-        Verify webhook payload signature.
+        Verify webhook payload signature (supports both SHA256 and legacy MD5).
 
         Args:
             payload: Webhook payload dict
@@ -211,10 +211,50 @@ class Client:
         if not signature:
             return False
 
-        params = {k: str(v) for k, v in payload.items() if k != 'signature'}
-        expected = self._generate_signature(params)
+        signature_version = int(payload.get('signature_version', 1))
 
-        return hmac.compare_digest(expected, signature)
+        # Clone and filter params
+        params = {}
+        for k, v in payload.items():
+            if k in ('signature', 'signature_version'):
+                continue
+            if v in ('', None):
+                continue
+            # Format numbers correctly
+            if k == 'amount' and isinstance(v, (int, float)):
+                params[k] = f'{float(v):.2f}'
+            elif k == 'actual_amount' and isinstance(v, (int, float)):
+                params[k] = f'{float(v):.4f}'
+            else:
+                params[k] = str(v)
+
+        expected = self._calculate_signature(params, signature_version)
+        return hmac.compare_digest(expected.lower(), signature.lower())
+
+    def _calculate_signature(self, params: Dict[str, str], version: int) -> str:
+        """Calculate signature based on version."""
+        # Filter and sort
+        filtered = {
+            k: v for k, v in params.items()
+            if k not in ('signature', 'signature_version') and v not in ('', None)
+        }
+        sorted_params = sorted(filtered.items())
+
+        # Build query string
+        query_string = '&'.join(f'{k}={v}' for k, v in sorted_params)
+
+        if version == 2:
+            # HMAC-SHA256 (recommended)
+            return hmac.new(
+                self.api_secret.encode(),
+                query_string.encode(),
+                hashlib.sha256
+            ).hexdigest()
+        else:
+            # Legacy MD5 (deprecated)
+            return hashlib.md5(
+                (query_string + self.api_secret).encode()
+            ).hexdigest()
 
     def _generate_signature(self, params: Dict[str, str]) -> str:
         """Generate HMAC-SHA256 signature."""
