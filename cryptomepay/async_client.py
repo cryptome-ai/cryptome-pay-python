@@ -11,7 +11,7 @@ try:
 except ImportError:
     HAS_AIOHTTP = False
 
-from cryptomepay.constants import VERSION, PRODUCTION_URL, SANDBOX_URL
+from cryptomepay.constants import VERSION, PRODUCTION_URL
 from cryptomepay.exceptions import CryptomePayError
 
 
@@ -92,16 +92,6 @@ class AsyncClient:
         if self._session:
             await self._session.close()
             self._session = None
-
-    def use_sandbox(self) -> 'AsyncClient':
-        """Switch to sandbox environment."""
-        self.base_url = SANDBOX_URL
-        return self
-
-    def use_production(self) -> 'AsyncClient':
-        """Switch to production environment."""
-        self.base_url = PRODUCTION_URL
-        return self
 
     async def create_payment(
         self,

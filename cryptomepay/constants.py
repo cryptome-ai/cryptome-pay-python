@@ -5,10 +5,8 @@ from enum import Enum, IntEnum
 # SDK Version
 VERSION = "1.0.0"
 
-# API URLs
+# API URL
 PRODUCTION_URL = "https://api.cryptomepay.com/api/v1"
-SANDBOX_URL = "https://sandbox.cryptomepay.com/api/v1"
-STAGING_URL = "https://staging.cryptomepay.com/api/v1"
 
 
 class ChainType(str, Enum):

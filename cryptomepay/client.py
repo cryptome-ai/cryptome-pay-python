@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 
 import requests
 
-from cryptomepay.constants import VERSION, PRODUCTION_URL, SANDBOX_URL
+from cryptomepay.constants import VERSION, PRODUCTION_URL
 from cryptomepay.exceptions import CryptomePayError
 
 
@@ -58,16 +58,6 @@ class Client:
             'Accept': 'application/json',
             'User-Agent': f'cryptomepay-python/{VERSION}',
         })
-
-    def use_sandbox(self) -> 'Client':
-        """Switch to sandbox environment."""
-        self.base_url = SANDBOX_URL
-        return self
-
-    def use_production(self) -> 'Client':
-        """Switch to production environment."""
-        self.base_url = PRODUCTION_URL
-        return self
 
     def create_payment(
         self,

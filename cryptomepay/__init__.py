@@ -28,8 +28,6 @@ from cryptomepay.exceptions import CryptomePayError, AuthenticationError, Valida
 from cryptomepay.constants import (
     VERSION,
     PRODUCTION_URL,
-    SANDBOX_URL,
-    STAGING_URL,
     ChainType,
     PaymentStatus,
     ErrorCode,
@@ -44,8 +42,6 @@ __all__ = [
     'ValidationError',
     'VERSION',
     'PRODUCTION_URL',
-    'SANDBOX_URL',
-    'STAGING_URL',
     'ChainType',
     'PaymentStatus',
     'ErrorCode',
