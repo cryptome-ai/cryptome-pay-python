@@ -130,22 +130,7 @@ def webhook():
     return 'ok'
 ```
 
-### Sandbox Environment
-
-```python
-# Switch to sandbox for testing
-client.use_sandbox()
-
-# Create test payment
-payment = client.create_payment(
-    order_id='TEST_001',
-    amount=100.01,  # Auto-success amount
-    notify_url='https://webhook.site/test'
-)
-
-# Switch back to production
-client.use_production()
-```
+> **Sandbox Testing:** Use the Merchant Dashboard's built-in Sandbox page to test payment flows without real blockchain transactions.
 
 ## Async Client
 
@@ -357,8 +342,6 @@ except CryptomePayError as e:
 | `query_payment_by_order_id(order_id)` | Query payment by order_id |
 | `list_orders(page, page_size, ...)` | List orders with filters |
 | `verify_webhook_signature(payload)` | Verify webhook signature |
-| `use_sandbox()` | Switch to sandbox environment |
-| `use_production()` | Switch to production environment |
 
 ### AsyncClient
 

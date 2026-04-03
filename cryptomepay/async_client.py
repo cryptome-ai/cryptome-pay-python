@@ -114,7 +114,14 @@ class AsyncClient:
         Returns:
             API response dict
         """
+        import time
+        timestamp = str(int(time.time()))
+        nonce = self._generate_nonce()
+
         params = {
+            'api_key': self.api_key,
+            'timestamp': timestamp,
+            'nonce': nonce,
             'order_id': order_id,
             'amount': f'{amount:.2f}',
             'notify_url': notify_url,
@@ -128,6 +135,9 @@ class AsyncClient:
         signature = self._generate_signature(params)
 
         body = {
+            'api_key': self.api_key,
+            'timestamp': timestamp,
+            'nonce': nonce,
             'order_id': order_id,
             'amount': amount,
             'notify_url': notify_url,
@@ -178,26 +188,84 @@ class AsyncClient:
         return await self._request('GET', '/merchant/info')
 
     def verify_webhook_signature(self, payload: Dict[str, Any]) -> bool:
-        """Verify webhook payload signature."""
+        """
+        Verify webhook payload signature (HMAC-SHA256).
+
+        Args:
+            payload: Webhook payload dict
+
+        Returns:
+            True if signature is valid
+        """
         signature = payload.get('signature', '')
         if not signature:
             return False
 
-        params = {k: str(v) for k, v in payload.items() if k != 'signature'}
-        expected = self._generate_signature(params)
+        # Clone and filter params
+        params = {}
+        for k, v in payload.items():
+            if k == 'signature':
+                continue
+            if v in ('', None):
+                continue
+            # Format amount fields correctly (handle both number and string types)
+            if k == 'amount':
+                try:
+                    params[k] = f'{float(v):.2f}'
+                except (ValueError, TypeError):
+                    params[k] = str(v)
+            elif k == 'actual_amount':
+                try:
+                    params[k] = f'{float(v):.4f}'
+                except (ValueError, TypeError):
+                    params[k] = str(v)
+            else:
+                params[k] = str(v)
 
-        return hmac.compare_digest(expected, signature)
+        expected = self._calculate_signature(params)
+        return hmac.compare_digest(expected.lower(), signature.lower())
 
-    def _generate_signature(self, params: Dict[str, str]) -> str:
-        """Generate MD5 signature."""
+    def _calculate_signature(self, params: Dict[str, str]) -> str:
+        """Calculate HMAC-SHA256 signature."""
+        # Filter and sort
         filtered = {
             k: v for k, v in params.items()
             if k != 'signature' and v not in ('', None)
         }
         sorted_params = sorted(filtered.items())
+
+        # Build query string
+        query_string = '&'.join(f'{k}={v}' for k, v in sorted_params)
+
+        return hmac.new(
+            self.api_secret.encode(),
+            query_string.encode(),
+            hashlib.sha256
+        ).hexdigest()
+
+    def _generate_signature(self, params: Dict[str, str]) -> str:
+        """Generate HMAC-SHA256 signature."""
+        # Filter and sort
+        filtered = {
+            k: v for k, v in params.items()
+            if k != 'signature' and v not in ('', None)
+        }
+        sorted_params = sorted(filtered.items())
+
+        # Build query string
         query_string = urlencode(sorted_params)
-        sign_string = query_string + self.api_secret
-        return hashlib.md5(sign_string.encode()).hexdigest()
+
+        # Generate HMAC-SHA256
+        return hmac.new(
+            self.api_secret.encode(),
+            query_string.encode(),
+            hashlib.sha256
+        ).hexdigest()
+
+    def _generate_nonce(self) -> str:
+        """Generate a random nonce string."""
+        import secrets
+        return secrets.token_hex(16)
 
     async def _request(
         self,
